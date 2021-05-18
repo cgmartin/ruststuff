@@ -19,6 +19,8 @@ RUN apt-get update \
     && /bin/bash /tmp/library-scripts/common-debian.sh "${INSTALL_ZSH}" "${USERNAME}" "${USER_UID}" "${USER_GID}" "${UPGRADE_PACKAGES}" \
     # Use Docker script from script library to set things up
     && /bin/bash /tmp/library-scripts/docker-debian.sh "${ENABLE_NONROOT_DOCKER}" "${SOURCE_SOCKET}" "${TARGET_SOCKET}" "${USERNAME}" \
+    # Set up rust for non-root user
+    && /bin/bash /tmp/library-scripts/rust-debian.sh "${CARGO_HOME}" "${RUSTUP_HOME}" "${USERNAME}" "true" "true" \
     # Clean up
     && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts/
 
@@ -38,13 +40,10 @@ RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhisto
     && echo $SNIPPET >> "/home/$USERNAME/.bashrc"
 
 # Install rust extras
-ENV RUSTUP_HOME=/usr/local/rustup \
-    CARGO_HOME=/usr/local/cargo \
-    PATH=/usr/local/cargo/bin:${PATH}
-RUN cargo install wasm-pack cargo-generate
+RUN su ${USERNAME} -c "cargo install wasm-pack cargo-generate"
 
 # Install node/npm extras
-RUN $(curl-fsSL https://deb.nodesource.com/setup_16.x | bash) \
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash \
     && apt-get update \
     && apt-get install -y nodejs \
     && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
