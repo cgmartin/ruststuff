@@ -37,6 +37,18 @@ RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhisto
     && chown -R $USERNAME /commandhistory \
     && echo $SNIPPET >> "/home/$USERNAME/.bashrc"
 
+# Install rust extras
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:${PATH}
+RUN cargo install wasm-pack cargo-generate
+
+# Install node/npm extras
+RUN $(curl-fsSL https://deb.nodesource.com/setup_16.x | bash) \
+    && apt-get update \
+    && apt-get install -y nodejs \
+    && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
 # # Install python extras
 # RUN apt-get update \
 #     && apt-get -y install --no-install-recommends pipenv 2>&1 \
